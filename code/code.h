@@ -196,10 +196,10 @@ void move(void *left, const void *right, uint size);
 void fill(void *left, uint size, byte value);
 void zero(void *left, uint size);
 
-#define COPY(left, right, count) copy(left, right, count * sizeof(typeof(*left)))
-#define MOVE(left, right, count) move(left, right, count * sizeof(typeof(*left)))
-#define FILL(left, count, value) fill(left, count * sizeof(typeof(*left)), value)
-#define ZERO(left, count)        zero(left, count * sizeof(typeof(*left)))
+#define COPY(left, right, count) copy(left, right, (count) * sizeof(typeof(*right)))
+#define MOVE(left, right, count) move(left, right, (count) * sizeof(typeof(*right)))
+#define FILL(left, count, value) fill(left, (count) * sizeof(typeof(*left)), value)
+#define ZERO(left, count)        zero(left, (count) * sizeof(typeof(*left)))
 
 sintb decode_utf8 (utf32 *left, const utf8  *right);
 sintb decode_utf16(utf32 *left, const utf16 *right);
@@ -263,7 +263,11 @@ constexpr uint universal_alignment = alignof(max_align_t);
 
 void *allocate(uint size);
 
+#define ALLOCATE(type, count) (type *)allocate((count) * sizeof(type))
+
 void deallocate(void *memory, uint size);
+
+#define DEALLOCATE(memory, count) deallocate(memory, (count) * sizeof(typeof(*memory)))
 
 typedef struct region region;
 struct region

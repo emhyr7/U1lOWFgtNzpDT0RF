@@ -393,66 +393,66 @@ typedef uint precedence;
 
 constexpr precedence precedences[] =
 {
-	[node_tag_subexpression] = 17,
-	[node_tag_indexation]    = 17,
-	[node_tag_scope]         = 17,
-	[node_tag_identifier]    = 17,
-	[node_tag_text]          = 17,
-	[node_tag_digital]       = 17,
-	[node_tag_decimal]       = 17,
+	[node_tag_subexpression] = 0,
+	[node_tag_indexation]    = 0,
+	[node_tag_scope]         = 0,
+	[node_tag_identifier]    = 0,
+	[node_tag_text]          = 0,
+	[node_tag_digital]       = 0,
+	[node_tag_decimal]       = 0,
 
-	[node_tag_logical_negation] = 16,
-	[node_tag_negation]         = 16,
-	[node_tag_bitwise_negation] = 16,
-	[node_tag_reference]        = 16,
+	[node_tag_procedure]     = 150,
 
-	[node_tag_multiplication] = 15,
-	[node_tag_division]       = 15,
-	[node_tag_modulus]        = 15,
+	[node_tag_logical_negation] = 140,
+	[node_tag_negation]         = 140,
+	[node_tag_bitwise_negation] = 140,
+	[node_tag_reference]        = 140,
 
-	[node_tag_addition]    = 14,
-	[node_tag_subtraction] = 14,
-	
-	[node_tag_bitwise_left_shift]  = 13,
-	[node_tag_bitwise_right_shift] = 13,
+	[node_tag_multiplication] = 130,
+	[node_tag_division]       = 130,
+	[node_tag_modulus]        = 130,
 
-	[node_tag_logical_minority]           = 12,
-	[node_tag_logical_majority]           = 12,
-	[node_tag_logical_inclusive_minority] = 12,
-	[node_tag_logical_inclusive_majority] = 12,
+	[node_tag_addition]    = 120,
+	[node_tag_subtraction] = 120,
+	
+	[node_tag_bitwise_left_shift]  = 110,
+	[node_tag_bitwise_right_shift] = 110,
 
-	[node_tag_logical_equality]   = 11,
-	[node_tag_logical_inequality] = 11,
-	
-	[node_tag_bitwise_conjunction] = 10,
-	
-	[node_tag_bitwise_exclusive_disjunction] = 9,
-	
-	[node_tag_bitwise_disjunction] = 8,
+	[node_tag_logical_minority]           = 100,
+	[node_tag_logical_majority]           = 100,
+	[node_tag_logical_inclusive_minority] = 100,
+	[node_tag_logical_inclusive_majority] = 100,
 
-	[node_tag_logical_conjunction] = 7,
+	[node_tag_logical_equality]   = 90,
+	[node_tag_logical_inequality] = 90,
 	
-	[node_tag_logical_disjunction] = 6,
+	[node_tag_bitwise_conjunction] = 80,
+	
+	[node_tag_bitwise_exclusive_disjunction] = 70,
+	
+	[node_tag_bitwise_disjunction] = 60,
 
-	[node_tag_procedure] = 5,
+	[node_tag_logical_conjunction] = 50,
 	
-	[node_tag_declaration] = 4,
-	
-	[node_tag_invocation] = 3,
-	
-	[node_tag_assignment]                               = 2,
-	[node_tag_addition_assignment]                      = 2,
-	[node_tag_subtraction_assignment]                   = 2,
-	[node_tag_multiplication_assignment]                = 2,
-	[node_tag_division_assignment]                      = 2,
-	[node_tag_modulus_assignment]                       = 2,
-	[node_tag_bitwise_conjunction_assignment]           = 2,
-	[node_tag_bitwise_disjunction_assignment]           = 2,
-	[node_tag_bitwise_exclusive_disjunction_assignment] = 2,
-	[node_tag_bitwise_left_shift_assignment]            = 2,
-	[node_tag_bitwise_right_shift_assignment]           = 2,
-	[node_tag_condition]                                = 2,
+	[node_tag_logical_disjunction] = 40,
 
+	[node_tag_invocation] = 30,
+	
+	[node_tag_declaration] = 20,
+	
+	[node_tag_assignment]                               = 10,
+	[node_tag_addition_assignment]                      = 10,
+	[node_tag_subtraction_assignment]                   = 10,
+	[node_tag_multiplication_assignment]                = 10,
+	[node_tag_division_assignment]                      = 10,
+	[node_tag_modulus_assignment]                       = 10,
+	[node_tag_bitwise_conjunction_assignment]           = 10,
+	[node_tag_bitwise_disjunction_assignment]           = 10,
+	[node_tag_bitwise_exclusive_disjunction_assignment] = 10,
+	[node_tag_bitwise_left_shift_assignment]            = 10,
+	[node_tag_bitwise_right_shift_assignment]           = 10,
+	[node_tag_condition]                                = 10,
+	
 	[node_tag_list] = 1,
 };
 
@@ -540,6 +540,8 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 			break;
 
 		case token_tag_equal_sign:
+			/* a declaration's cast is omittable, and the only possible subsequent token
+			   that may be a binary operator is an equal sign, so handle that case. */
 			break;
 
 		default:
@@ -677,6 +679,7 @@ static void display_node(const node *node, uint depth)
 			switch (node->tag)
 			{
 			case node_tag_scope:
+				printf("\n");
 				for (uint i = 0; i < node->data->scope.nodes_count; ++i)
 				{
 					display_node(node->data->scope.nodes[i], depth);
@@ -727,16 +730,27 @@ void parser_parse_scope(scope_node *result, parser *parser)
 	bit is_global = result == &parser->program->globe;
 	if (!is_global) ASSERT(parser->token.tag == token_tag_left_curly_bracket);
 
-	regional_allocator buffer = {0};
+	uint nodes_capacity = 8;
+	result->nodes = ALLOCATE(node *, nodes_capacity);
+	result->nodes_count = 0;
 
-	parser_get_token(parser);
+	parser_get_token(parser); /* get the first token if `is_global`, otherwise, skip the `{` */
 	for (;;)
 	{
 		node *current_node = parser_parse_node(0, parser);
-		*PUSH(node *, 1, &buffer) = current_node;
-		result->nodes_count += 1;
-
-		display_node(current_node, 0);
+		if (current_node)
+		{
+			if (result->nodes_count >= nodes_capacity)
+			{
+				uint additional_capacity = nodes_capacity / 2;
+				node **new_memory = ALLOCATE(node *, nodes_capacity + additional_capacity);
+				COPY(new_memory, result->nodes, result->nodes_count);
+				DEALLOCATE(result->nodes, nodes_capacity);
+				nodes_capacity += additional_capacity;
+				result->nodes = new_memory;
+			}
+			result->nodes[result->nodes_count++] = current_node;
+		}
 
 		switch (parser->token.tag)
 		{
@@ -844,6 +858,10 @@ void parser_parse(const utf8 *source_path, program *program, parser *parser)
 	parser->program = program;
 	parser_load(source_path, parser);
 	parser_parse_scope(&parser->program->globe, parser);
+	for (uint i = 0; i < parser->program->globe.nodes_count; ++i)
+	{
+		display_node(parser->program->globe.nodes[i], 0);
+	}
 
 	REPORT_VERBOSE("Finished parsing.\n");
 }
