@@ -59,8 +59,8 @@ typedef int16_t sint16;
 typedef int32_t sint32;
 typedef int64_t sint64;
 
-typedef float  float32;
-typedef double float64;
+typedef float  real32;
+typedef double real64;
 
 typedef char    utf8;
 typedef wchar_t utf16;

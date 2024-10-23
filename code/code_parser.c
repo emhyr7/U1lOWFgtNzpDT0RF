@@ -132,9 +132,9 @@ static void parser_load(const utf8 *source_path, parser *parser)
 
 static token_tag parser_get_token(parser *parser)
 {
+repeat:
 	while (is_whitespace(parser->rune)) parser_advance(parser);
 
-repeat:
 	parser->token.beginning = parser->position;
 	parser->token.row       = parser->row;
 	parser->token.column    = parser->column;
@@ -197,6 +197,12 @@ repeat:
 		{
 			parser->token.tag = token_tag_minus_sign_greater_than_sign;
 			goto advance_twice;
+		}
+		else if (peeked_rune == '-')
+		{
+			do parser_advance(parser);
+			while (parser->rune != '\n');
+			goto repeat;
 		}
 		else goto set_single;
 	case '/':
@@ -549,7 +555,6 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 			jump(*parser->failure_landing, 1);
 		}
 	}
-
 	if (left)
 	{
 		for (;;)
@@ -731,7 +736,7 @@ void parser_parse_scope(scope_node *result, parser *parser)
 	if (!is_global) ASSERT(parser->token.tag == token_tag_left_curly_bracket);
 
 	uint nodes_capacity = 8;
-	result->nodes = ALLOCATE(node *, nodes_capacity);
+	result->nodes = ALLOCATE(node *, nodes_capacity); /* TODO: stop `VirtualAlloc`ing */
 	result->nodes_count = 0;
 
 	parser_get_token(parser); /* get the first token if `is_global`, otherwise, skip the `{` */
@@ -862,6 +867,8 @@ void parser_parse(const utf8 *source_path, program *program, parser *parser)
 	{
 		display_node(parser->program->globe.nodes[i], 0);
 	}
+
+	
 
 	REPORT_VERBOSE("Finished parsing.\n");
 }
