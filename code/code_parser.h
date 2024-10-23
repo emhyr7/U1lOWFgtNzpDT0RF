@@ -28,28 +28,28 @@ typedef struct
 
 typedef enum : uintb 
 {
-#define X(identifier, body, syntax) node_tag_##identifier,
+#define X(type, identifier, body, syntax) node_tag_##identifier,
 	#include "code_nodes.inc"
 #undef X
 } node_tag;
 
 constexpr utf8 node_tag_representations[][40] =
 {
-#define X(identifier, body, syntax) [node_tag_##identifier] = #identifier,
+#define X(type, identifier, body, syntax) [node_tag_##identifier] = #identifier,
 	#include "code_nodes.inc"
 #undef X
 };
 
 constexpr utf8 node_syntaxes[][40] =
 {
-#define X(identifier, body, syntax) [node_tag_##identifier] = syntax,
+#define X(type, identifier, body, syntax) [node_tag_##identifier] = syntax,
 	#include "code_nodes.inc"
 #undef X
 };
 
 typedef struct node node;
 
-#define X(identifier, body, syntax) typedef struct identifier##_node body identifier##_node;
+#define X(type, identifier, body, syntax) typedef struct identifier##_node body identifier##_node;
 	#include "code_nodes.inc"
 #undef X
 
@@ -58,7 +58,7 @@ struct node
 	node_tag tag;
 	union
 	{
-#define X(identifier, body, syntax) identifier##_node identifier;
+#define X(type, identifier, body, syntax) identifier##_node identifier;
 	#include "code_nodes.inc"
 #undef X
 	} data[];

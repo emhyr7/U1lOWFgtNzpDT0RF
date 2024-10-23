@@ -11,7 +11,12 @@
 	#define CODE_ON_PLATFORM_LINUX
 #endif
 
+#define UNICODE
+#define _UNICODE
+#include <Windows.h>
+
 #include <assert.h>
+#include <locale.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -20,15 +25,14 @@
 #include <stddef.h>
 #include <setjmp.h>
 
-/* function macros */
-
 #define UNREACHABLE() __builtin_unreachable()
 
 #define EXPECT(x, v)  __builtin_expect((x), (v))
 #define LIKELY(x)   EXPECT(x, 1)
 #define UNLIKELY(x) EXPECT(x, 0)
 
-#define ASSERT(...) assert(__VA_ARGS__)
+#define ASSERT(...)     assert(__VA_ARGS__)
+#define UNIMPLEMENTED() ({ASSERT(!"UNIMPLEMENTED"); UNREACHABLE(); })
 
 #define OMIT(x) (void)x
 
@@ -38,8 +42,6 @@
 #define KIB(x) ((x) << 10)
 #define MIB(x) ((x) << 20)
 #define GIG(x) (((uint64)x) << 30)
-
-/* basic types */
 
 typedef va_list vargs;
 #define GET_VARGS(...)  va_start(__VA_ARGS__) 
@@ -63,8 +65,6 @@ typedef double float64;
 typedef char    utf8;
 typedef wchar_t utf16;
 typedef uint32  utf32;
-
-/* limits */
 
 #define UINT_MAXIMUM(type) ((type)~0)
 
@@ -90,8 +90,6 @@ constexpr sint16 sint16_minimum = -1 - sint16_maximum;
 constexpr sint32 sint32_minimum = -1 - sint32_maximum;
 constexpr sint64 sint64_minimum = -1 - sint64_maximum;
 
-/* extra types */
-
 typedef uint8  uintb;
 typedef uint16 uints;
 typedef uint32 uint;
@@ -103,7 +101,7 @@ typedef sint32 sint;
 typedef sint64 sintl;
 
 typedef uintb byte;
-typedef byte  bit; /* the possible values should _only_ be 0 or 1 */
+typedef byte  bit; // the possible values should _only_ be 0 or 1
 
 constexpr uint byte_bits_count = 8;
 
@@ -113,8 +111,6 @@ typedef uint32 bits32;
 typedef uint64 bits64;
 
 typedef bits64 address;
-
-/* masks */
 
 #define BIT(x) (1ull << (x - 1))
 
@@ -186,17 +182,14 @@ constexpr bits64 lmask30 = LMASK(30);
 constexpr bits64 lmask31 = LMASK(31);
 constexpr bits64 lmask32 = LMASK(32);
 
-/* math */
+address get_backward_alignment(address address, uintb alignment);
+address get_forward_alignment (address address, uintb alignment);
 
-address get_backward_alignment(address address, uint alignment);
-address get_forward_alignment(address address, uint alignment);
-address align_forward(address address, uintb alignment);
+address align_forward (address address, uintb alignment);
 address align_backward(address address, uintb alignment);
 
 #define MINIMUM(a, b) ((a) < (b) ? (a) : (b))
 #define MAXIMUM(a, b) ((a) > (b) ? (a) : (b))
-
-/* utilities */
 
 void copy(void *left, const void *right, uint size);
 void move(void *left, const void *right, uint size);
@@ -208,36 +201,30 @@ void zero(void *left, uint size);
 #define FILL(left, count, value) fill(left, count * sizeof(typeof(*left)), value)
 #define ZERO(left, count)        zero(left, count * sizeof(typeof(*left)))
 
-/* text */
-
-sintb decode_utf8(utf32 *left, const utf8 *right);
-
+sintb decode_utf8 (utf32 *left, const utf8  *right);
 sintb decode_utf16(utf32 *left, const utf16 *right);
 
-sintb encode_utf8(utf8 *left, utf32 right);
-
+sintb encode_utf8 (utf8  *left, utf32 right);
 sintb encode_utf16(utf16 *left, utf32 right);
 
-sintl make_utf8_text_from_utf16(utf8 *left, const utf16 *right);
+sintl make_utf8_text_from_utf16(utf8  *left, const utf16 *right);
+sintl make_utf16_text_from_utf8(utf16 *left, const utf8  *right);
 
-sintl make_utf16_text_from_utf8(utf16 *left, const utf8 *right);
-
-uint get_size_of_utf8_text(const utf8 *text);
-
+uint get_size_of_utf8_text (const utf8  *text);
 uint get_size_of_utf16_text(const utf16 *text);
 
-sint compare_text(const utf8 *left, const utf8 *right);
+sint compare_text      (const utf8 *left, const utf8 *right);
 sint compare_sized_text(const utf8 *left, const utf8 *right, uint size);
+
 #define COMPARE_LITERAL_TEXT(left, right) compare_sized_text(left, right, sizeof(right))
 
-void copy_text(utf8 *left, const utf8 *right);
+void copy_text      (utf8 *left, const utf8 *right);
 void copy_sized_text(utf8 *left, const utf8 *right, uint size);
+
 #define COPY_LITERAL_TEXT(left, right) copy_sized_text(left, right, sizeof(right))
 
-sintl v_format_text(utf8 *buffer, uint size, const utf8 *format, vargs vargs);
-sintl format_text(utf8 *buffer, uint size, const utf8 *format, ...);
-
-/* jumping */
+sintl format_text_v(utf8 *buffer, uint size, const utf8 *format, vargs vargs);
+sintl format_text  (utf8 *buffer, uint size, const utf8 *format, ...);
 
 typedef jmp_buf landing;
 
@@ -246,11 +233,9 @@ typedef jmp_buf landing;
 [[noreturn]]
 void jump(landing landing, int status);
 
-/* reporting */
-
 typedef enum : uintb
 {
-	/* they all have equal width ! how neat ! */
+	// they all have equal width ! how neat !
 	severity_verbose,
 	severity_comment,
 	severity_caution,
@@ -273,10 +258,12 @@ void _report(const char *file, uint line, severity severity, const char *message
 #define REPORT_CAUTION(...) REPORT(severity_caution, __VA_ARGS__)
 #define REPORT_FAILURE(...) REPORT(severity_failure, __VA_ARGS__)
 
-/* allocation */
-
 constexpr uint memory_page_size = 4096;
 constexpr uint universal_alignment = alignof(max_align_t);
+
+void *allocate(uint size);
+
+void deallocate(void *memory, uint size);
 
 typedef struct region region;
 struct region
@@ -304,9 +291,8 @@ struct regional_allocator
 
 void *push(uint size, uint alignment, regional_allocator *allocator);
 
-#define PUSH(type, count, allocator) (type *)push(count * sizeof(type), alignof(type), allocator)
-
-/* structures */
+#define PUSH(type, count, allocator)      (type *)push(count * sizeof(type), alignof(type), allocator)
+#define PUSH_TRAIN(head, body, allocator) (head *)push(sizeof(head) + sizeof(body), alignof(head), allocator)
 
 extern thread_local struct context
 {
@@ -324,29 +310,16 @@ extern struct base
 	uint  command_line_size;
 } base;
 
-/* time */
-
 uintl get_time(void);
 
-/* memory */
-
-void *allocate(uint size);
-
-void deallocate(void *memory, uint size);
-
-/* files */
-
-#if defined(CODE_ON_PLATFORM_WIN32)
-	#include "code_win32.h"
-#endif
+constexpr uint maximum_size_of_path = MAX_PATH;
 
 typedef void *file_handle;
 
 uint get_current_directory_path(utf8 *path);
 
 file_handle create_file(const utf8 *path);
-
-file_handle open_file(const utf8 *path);
+file_handle open_file  (const utf8 *path);
 
 uintl get_size_of_file(file_handle handle);
 

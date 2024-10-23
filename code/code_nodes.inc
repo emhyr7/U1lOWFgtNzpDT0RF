@@ -1,76 +1,76 @@
-/* (identifier, body, syntax) */
+/* (type, identifier, body, syntax) */
 
-X(undefined, {}, "")
+X(0, undefined, {}, "")
 
 /* expressions */
 #define UNARY_NODE_BODY   { node *node; }
 #define BINARY_NODE_BODY  { node *left; node *right; }
 #define TERNARY_NODE_BODY { struct BINARY_NODE_BODY; struct UNARY_NODE_BODY; }
 
-X(unary,   UNARY_NODE_BODY,   "operator node")
-X(binary,  BINARY_NODE_BODY,  "node operator node")
-X(ternary, TERNARY_NODE_BODY, "node operator node [operator node]")
+X(0, unary,   UNARY_NODE_BODY,   "operator node")
+X(0, binary,  BINARY_NODE_BODY,  "node operator node")
+X(0, ternary, TERNARY_NODE_BODY, "node operator node [operator node]")
 
 /* scoped expressions */
-X(subexpression, UNARY_NODE_BODY, "`(` node `)`")
-X(indexation,    UNARY_NODE_BODY, "`[` node `]`")
+X(1, subexpression, UNARY_NODE_BODY, "`(` node `)`")
+X(1, indexation,    UNARY_NODE_BODY, "`[` node `]`")
 
 /* logical expressions */
-X(logical_negation,           UNARY_NODE_BODY,  "`!` node")
-X(logical_conjunction,        BINARY_NODE_BODY, "node `&&` node")
-X(logical_disjunction,        BINARY_NODE_BODY, "node `||` node")
-X(logical_equality,           BINARY_NODE_BODY, "node `==` node")
-X(logical_inequality,         BINARY_NODE_BODY, "node `!=` node")
-X(logical_majority,           BINARY_NODE_BODY, "node `>` node")
-X(logical_minority,           BINARY_NODE_BODY, "node `<` node")
-X(logical_inclusive_majority, BINARY_NODE_BODY, "node `>=` node")
-X(logical_inclusive_minority, BINARY_NODE_BODY, "node `<=` node")
+X(1, logical_negation,           UNARY_NODE_BODY,  "`!` node")
+X(2, logical_conjunction,        BINARY_NODE_BODY, "node `&&` node")
+X(2, logical_disjunction,        BINARY_NODE_BODY, "node `||` node")
+X(2, logical_equality,           BINARY_NODE_BODY, "node `==` node")
+X(2, logical_inequality,         BINARY_NODE_BODY, "node `!=` node")
+X(2, logical_majority,           BINARY_NODE_BODY, "node `>` node")
+X(2, logical_minority,           BINARY_NODE_BODY, "node `<` node")
+X(2, logical_inclusive_majority, BINARY_NODE_BODY, "node `>=` node")
+X(2, logical_inclusive_minority, BINARY_NODE_BODY, "node `<=` node")
 
 /* arithmetic expressions */
-X(negation,       UNARY_NODE_BODY,  "`-` node")  
-X(addition,       BINARY_NODE_BODY, "node `+` node") 
-X(subtraction,    BINARY_NODE_BODY, "node `-` node") 
-X(multiplication, BINARY_NODE_BODY, "node `*` node") 
-X(division,       BINARY_NODE_BODY, "node `/` node") 
-X(modulus,        BINARY_NODE_BODY, "node `%` node") 
+X(1, negation,       UNARY_NODE_BODY,  "`-` node")  
+X(2, addition,       BINARY_NODE_BODY, "node `+` node") 
+X(2, subtraction,    BINARY_NODE_BODY, "node `-` node") 
+X(2, multiplication, BINARY_NODE_BODY, "node `*` node") 
+X(2, division,       BINARY_NODE_BODY, "node `/` node") 
+X(2, modulus,        BINARY_NODE_BODY, "node `%` node") 
 
 /* bitwise expressions */
-X(bitwise_negation,              UNARY_NODE_BODY,  "`~` node")
-X(bitwise_conjunction,           BINARY_NODE_BODY, "node `&` node")
-X(bitwise_disjunction,           BINARY_NODE_BODY, "node `|` node")
-X(bitwise_exclusive_disjunction, BINARY_NODE_BODY, "node `^` node")
-X(bitwise_left_shift,            BINARY_NODE_BODY, "node `<<` node")
-X(bitwise_right_shift,           BINARY_NODE_BODY, "node `>>` node")
+X(1, bitwise_negation,              UNARY_NODE_BODY,  "`~` node")
+X(2, bitwise_conjunction,           BINARY_NODE_BODY, "node `&` node")
+X(2, bitwise_disjunction,           BINARY_NODE_BODY, "node `|` node")
+X(2, bitwise_exclusive_disjunction, BINARY_NODE_BODY, "node `^` node")
+X(2, bitwise_left_shift,            BINARY_NODE_BODY, "node `<<` node")
+X(2, bitwise_right_shift,           BINARY_NODE_BODY, "node `>>` node")
 
 /* assignment expressions */
-X(assignment,                               BINARY_NODE_BODY, "node `=` node")
-X(addition_assignment,                      BINARY_NODE_BODY, "node `+=` node")
-X(subtraction_assignment,                   BINARY_NODE_BODY, "node `-=` node")
-X(multiplication_assignment,                BINARY_NODE_BODY, "node `*=` node")
-X(division_assignment,                      BINARY_NODE_BODY, "node `/=` node")
-X(modulus_assignment,                       BINARY_NODE_BODY, "node `%=` node")
-X(bitwise_conjunction_assignment,           BINARY_NODE_BODY, "node `&=` node")
-X(bitwise_disjunction_assignment,           BINARY_NODE_BODY, "node `|=` node")
-X(bitwise_exclusive_disjunction_assignment, BINARY_NODE_BODY, "node `^=` node")
-X(bitwise_left_shift_assignment,            BINARY_NODE_BODY, "node `<<=` node")
-X(bitwise_right_shift_assignment,           BINARY_NODE_BODY, "node `>>=` node")
+X(2, assignment,                               BINARY_NODE_BODY, "node `=` node")
+X(2, addition_assignment,                      BINARY_NODE_BODY, "node `+=` node")
+X(2, subtraction_assignment,                   BINARY_NODE_BODY, "node `-=` node")
+X(2, multiplication_assignment,                BINARY_NODE_BODY, "node `*=` node")
+X(2, division_assignment,                      BINARY_NODE_BODY, "node `/=` node")
+X(2, modulus_assignment,                       BINARY_NODE_BODY, "node `%=` node")
+X(2, bitwise_conjunction_assignment,           BINARY_NODE_BODY, "node `&=` node")
+X(2, bitwise_disjunction_assignment,           BINARY_NODE_BODY, "node `|=` node")
+X(2, bitwise_exclusive_disjunction_assignment, BINARY_NODE_BODY, "node `^=` node")
+X(2, bitwise_left_shift_assignment,            BINARY_NODE_BODY, "node `<<=` node")
+X(2, bitwise_right_shift_assignment,           BINARY_NODE_BODY, "node `>>=` node")
 
 /* other expressions */
-X(reference,   UNARY_NODE_BODY,   "`@` node")
-X(invocation,  BINARY_NODE_BODY,  "node node")
-X(resolution,  BINARY_NODE_BODY,  "node `.` node")
-X(list,        BINARY_NODE_BODY,  "node `,` node")
-X(procedure,   TERNARY_NODE_BODY, "node `->` node")
-X(declaration, TERNARY_NODE_BODY, "node `:` node")
-X(condition,   TERNARY_NODE_BODY, "node `?` node [`:` node]")
+X(1, reference,   UNARY_NODE_BODY,   "`@` node")
+X(2, invocation,  BINARY_NODE_BODY,  "node node")
+X(2, resolution,  BINARY_NODE_BODY,  "node `.` node")
+X(2, list,        BINARY_NODE_BODY,  "node `,` node")
+X(2, declaration, BINARY_NODE_BODY,  "node `:` node")
+X(3, procedure,   TERNARY_NODE_BODY, "node `->` node [scope]")
+X(3, condition,   TERNARY_NODE_BODY, "node `?` node [`:` node]")
 
 #undef TERNARY_NODE_BODY
 #undef BINARY_NODE_BODY
 #undef UNARY_NODE_BODY
 
 // literals
-X(scope,      { node *nodes; uint nodes_count; }, "`{` {node `;`} `}`")
-X(identifier, { utf8 *runes; uint runes_count; }, "identifier")
-X(text,       { utf8 *runes; uint runes_count; }, "text")
-X(digital,    { uint64  value; },                 "digital|hexadecimal|binary")
-X(decimal,    { float64 value; },                 "decimal|scientific")
+X(0, scope,      { node **nodes; uint nodes_count; }, "`{` {node `;`} `}`")
+X(0, identifier, { utf8 *runes; uint runes_count; }, "identifier")
+X(0, text,       { utf8 *runes; uint runes_count; }, "text")
+X(0, digital,    { uint64  value; },                 "digital|hexadecimal|binary")
+X(0, decimal,    { float64 value; },                 "decimal|scientific")

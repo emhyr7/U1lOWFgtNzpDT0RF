@@ -2,27 +2,61 @@
 
 #include "code_parser.c"
 
-void start(void)
+struct
 {
+	HINSTANCE    instance;
+	STARTUPINFOW startup_info;
+
+	const utf16 *command_line;
+
+	uintl performance_frequency;
+} win32;
+
+int main(int arguments_count, char *arguments[])
+{
+	setlocale(LC_CTYPE, "");
+	/* initialize platform-specific stuff */
+	{
+		win32.instance = GetModuleHandle(0);
+		GetStartupInfoW(&win32.startup_info);
+
+		win32.command_line = GetCommandLineW();
+		base.command_line_size = make_utf8_text_from_utf16(0, win32.command_line);
+		base.command_line = push(base.command_line_size + 1, universal_alignment, &base.persistent_allocator);
+		make_utf8_text_from_utf16(base.command_line, win32.command_line);
+
+		LARGE_INTEGER frequency;
+		QueryPerformanceFrequency(&frequency);
+		win32.performance_frequency = frequency.QuadPart;
+	}
+
+	context.failure_landing = &context.default_failure_landing;
+	if (SET_LANDING(context.default_failure_landing))
+	{
+		UNIMPLEMENTED();
+	}
+
 	program program;
 
-	parser parser;
-	parser_parse("tests/basics.code", &program, &parser);
-}
+	if (arguments_count <= 1)
+	{
+		REPORT_FAILURE("A source path wasn't given.");
+		return -1;
+	}
 
-#if defined(CODE_ON_PLATFORM_WIN32)
-	#include "code_win32.c"
-#endif
+	parser parser;
+	parser_parse(arguments[1], &program, &parser);
+}
 
 /* math */
 
-inline address get_backward_alignment(address address, uint alignment)
+inline address get_backward_alignment(address address, uintb alignment)
 {
 	if (alignment == 1) alignment = 0;
 	return alignment ? address & (alignment - 1) : 0;
 }
 
-inline address get_forward_alignment(address address, uint alignment)
+inline address get_forward_alignment(address address, uintb alignment)
 {
 	uintl remainder = get_backward_alignment(address, alignment);
 	return remainder ? alignment - remainder : 0;
@@ -37,8 +71,6 @@ inline address align_backward(address address, uintb alignment)
 {
 	return address - get_backward_alignment(address, alignment);
 }
-
-/* utilities */
 
 inline void copy(void *left, const void *right, uint size)
 {
@@ -353,7 +385,7 @@ inline void copy_sized_text(utf8 *left, const utf8 *right, uint size)
 #define STB_SPRINTF_IMPLEMENTATION
 #include <stb/stb_sprintf.h>
 
-inline sintl v_format_text(utf8 *buffer, uint size, const utf8 *format, vargs vargs)
+inline sintl format_text_v(utf8 *buffer, uint size, const utf8 *format, vargs vargs)
 {
 	return __builtin_vsnprintf(buffer, size, format, vargs);
 }
@@ -362,19 +394,15 @@ inline sintl format_text(utf8 *buffer, uint size, const utf8 *format, ...)
 {
 	vargs vargs;
 	GET_VARGS(vargs, format);
-	sintl result = v_format_text(buffer, size, format, vargs);
+	sintl result = format_text_v(buffer, size, format, vargs);
 	END_VARGS(vargs);
 	return result;
 }
-
-/* jumping */
 
 inline void jump(landing landing, int status)
 {
 	longjmp(landing, status);
 }
-
-/* reporting */
 
 void _report(const char *file, uint line, severity severity, const char *message, ...)
 {
@@ -387,7 +415,18 @@ void _report(const char *file, uint line, severity severity, const char *message
 	END_VARGS(vargs);
 }
 
-/* allocation */
+inline void *allocate(uint size)
+{
+	void *memory = VirtualAlloc(0, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	ASSERT(memory);
+	return memory;
+}
+
+inline void deallocate(void *memory, uint size)
+{
+	OMIT(size);
+	VirtualFree(memory, 0, MEM_RELEASE);
+}
 
 void *push(uint size, uint alignment, regional_allocator *allocator)
 {
@@ -431,8 +470,54 @@ void *push(uint size, uint alignment, regional_allocator *allocator)
 	return memory;
 }
 
-/* structures */
-
 thread_local struct context context;
 
 struct base base;
+
+inline uintl get_time(void)
+{
+	LARGE_INTEGER counter;
+	QueryPerformanceCounter(&counter);
+	return counter.QuadPart * 1e9 / win32.performance_frequency;
+}
+
+inline uint get_current_directory_path(utf8 *path)
+{
+	utf16 path_buffer[maximum_size_of_path];
+	uint size = GetCurrentDirectoryW(sizeof(path_buffer), path_buffer);
+	make_utf8_text_from_utf16(path, path_buffer);
+	return size;
+}
+
+inline file_handle create_file(const utf8 *path)
+{
+	file_handle result = CreateFileA(path, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0);
+	ASSERT(result != INVALID_HANDLE_VALUE);
+	return result;
+}
+
+inline file_handle open_file(const utf8 *path)
+{
+	file_handle result = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	ASSERT(result != INVALID_HANDLE_VALUE);
+	return result;
+}
+
+inline uintl get_size_of_file(file_handle handle)
+{
+	LARGE_INTEGER file_size;
+	ASSERT(GetFileSizeEx(handle, &file_size));
+	return file_size.QuadPart;
+}
+
+inline uint read_from_file(void *buffer, uint size, file_handle handle)
+{
+	DWORD bytes_read_count;
+	ASSERT(ReadFile(handle, buffer, size, &bytes_read_count, 0));
+	return bytes_read_count;
+}
+
+inline void close_file(file_handle handle)
+{
+	CloseHandle(handle);
+}
