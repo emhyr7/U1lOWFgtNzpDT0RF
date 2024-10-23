@@ -408,7 +408,7 @@ inline void jump(landing landing, int status)
 void _report(const char *file, uint line, severity severity, const char *message, ...)
 {
 	/* printf("[%s] %s:%u: ", severity_representations[severity], file, line); */
-	printf("[%s] ", representations_of_severities[severity]);
+	printf("[%s] ", severities_representations[severity]);
 
 	vargs vargs;
 	GET_VARGS(vargs, message);

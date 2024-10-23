@@ -2,7 +2,7 @@
 
 static void report_source_v(severity severity, const utf8 *source_path, const utf8 *source, uint beginning, uint ending, uint row, uint column, const utf8 *message, vargs vargs)
 {
-	fprintf(stderr, "[%s] %s(%u|%u:%u): ", representations_of_severities[severity], source_path, beginning, row, column);
+	fprintf(stderr, "[%s] %s(%u|%u:%u): ", severities_representations[severity], source_path, beginning, row, column);
 	vfprintf(stderr, message, vargs);
 	fputc('\n', stderr);
 
@@ -384,7 +384,7 @@ static void parser_ensure_token(token_tag tag, parser *parser)
 {
 	if (parser->token.tag != tag)
 	{
-		parser_report_failure(parser, "Expected token: %s.", representations_of_token_tags[tag]);
+		parser_report_failure(parser, "Expected token: %s.", token_tags_representations[tag]);
 		jump(*parser->failure_landing, 1);
 	}
 }
@@ -681,7 +681,7 @@ static void display_node(const node *node, uint depth)
 
 	if (node)
 	{
-		printf("%s: ", representations_of_node_tags[node->tag]);
+		printf("%s: ", node_tags_representations[node->tag]);
 
 		depth += 1;
 		switch (types[node->tag])
@@ -771,14 +771,14 @@ void parser_parse_scope(scope_node *result, parser *parser)
 		case token_tag_etx:
 			if (!is_global)
 			{
-				parser_report_failure(parser, "Unterminted %s.", representations_of_token_tags[token_tag_left_curly_bracket]);
+				parser_report_failure(parser, "Unterminted %s.", token_tags_representations[token_tag_left_curly_bracket]);
 				goto failed;
 			}
 			else goto finished;
 		case token_tag_right_curly_bracket:
 			if (is_global)
 			{
-				parser_report_failure(parser, "Extraneous %s.", representations_of_token_tags[token_tag_right_curly_bracket]);
+				parser_report_failure(parser, "Extraneous %s.", token_tags_representations[token_tag_right_curly_bracket]);
 				goto failed;
 			}
 			else goto finished;
@@ -825,7 +825,7 @@ void parser_parse_digital(digital_node *result, parser *parser)
 	       || parser->token.tag == token_tag_digital
 	       || parser->token.tag == token_tag_hexadecimal);
 
-	uintb base;
+	uint base;
 	switch (parser->token.tag)
 	{
 	case token_tag_binary:      base = 2;  break;
@@ -835,7 +835,18 @@ void parser_parse_digital(digital_node *result, parser *parser)
 	}
 
 	utf8 *ending;
-	result->value = strtoull(parser->source + parser->token.beginning, &ending, base);
+	result->value = 0;
+	uint token_size = parser->token.ending - parser->token.beginning;
+	utf8 *source = parser->source + parser->token.beginning;
+	for (uint i = 0; i < token_size; ++i)
+	{
+		utf8 character = source[i];
+		if (character == '_') continue;
+		result->value *= base;
+		if (parser->token.tag == token_tag_hexadecimal) character -= character - '9' - 1;
+		result->value += character - '0';
+	}
+	
 	parser_get_token(parser);
 
 	/* TODO: ditch the C standard library */

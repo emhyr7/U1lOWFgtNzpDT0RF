@@ -242,7 +242,7 @@ typedef enum : uintb
 	severity_failure,
 } severity;
 
-constexpr utf8 representations_of_severities[][8] =
+constexpr utf8 severities_representations[][8] =
 {
 	[severity_verbose] = "VERBOSE",
 	[severity_comment] = "COMMENT",

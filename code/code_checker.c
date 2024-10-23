@@ -1,70 +1,48 @@
 #include "code_parser.h"
 
-typedef enum : uintb
+typedef enum
 {
-	symbol_type_procedure,
-	symbol_type_tuple,
 	symbol_type_value,
+	symbol_type_tuple,
+	symbol_type_procedure,
+	symbol_types_count,
 } symbol_type;
 
 typedef struct
 {
-	utf8 identifier[32]; /* TODO: allow larger identifiers */
+	utf8 identifier[32];
 	uint identifier_size;
-	node *node;
 } symbol;
 
 typedef struct
 {
 	symbol *symbols;
 	uint    symbols_count;
-} symbol_table_row;
+} symbols_row;
 
 typedef struct symbol_table symbol_table;
 
+/* this symbol table is good for local symbols. for global symbols, a hash table
+   is used.
+   
+   we use different structures because globals are expected to be abundant,
+   unlike locals.
+
+   the "global symbol table" is defined within the `program` structure. */
 struct symbol_table
 {
-	symbol_table_row *rows;
-	uint              rows_count;
+	symbol_table *parent;
+	symbol_table *children;
+	uint          children_count;
+
+	symbol_row value_rows;
+	symbol_row tuple_rows;
+	symbol_row procedure_rows;
 };
 
-uint hash_for_symbol_table(const utf8 *identifier, uint identifier_size, symbol_table *table)
+symbol *get_symbol(symbol_table *table)
 {
-	uint hash = 0;
-	for (uint i = 0; i < identifier_size; ++i) hash += identifier[i];
-	hash %= table->rows_count;
-	return hash;
-}
-
-symbol *get_symbol(const identifier_node *identifier, symbol_table *table)
-{
-	uint hash = hash_for_symbol_table(identifier->runes, identifier->runes_count, table);
-	symbol_table_row *row = &table->rows[hash];
-	for (uint i = 0; i < row->symbols_count; ++i)
-	{
-		symbol *symbol = &row->symbols[i];
-		if (!compare_sized_text(symbol->identifier, identifier->runes, identifier->runes_count))
-		{
-			return symbol;
-		}
-	}
-	return 0;
-}
-
-void check_node(node *node)
-{
-	if (is_symbol_usage)
-	{
-		symbol *symbol = get_symbol(identifier, &current_scope->symbol_table);
-		if (symbol)
-		{
-			
-		}
-		else
-		{
-			push_undefined_symbol(node->data->identifier, &parser->current_scope->symbol_table);
-		}
-	}
+	
 }
 
 #if 0 /* we dont' need this at the moment */

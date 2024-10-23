@@ -5,6 +5,14 @@ though the syntax of an invocation is
 the syntax of an identifier or resolution can be interpreted as an invocation
 too.
 
+--- -----
+
+a table of mappings from an identifier to an index to a type.
+
+
+"foo"
+-> type-index
+-> type-table[type-index]
 
 --- TYPE CASTING ---------------------------------------------------------------
 
@@ -17,7 +25,15 @@ too.
 	d = c = b = a;
 }
 
+{
+	a: real32;
+	b: real64;
 
+	--	the following is ill-formed:
+	--
+	--		b = a;
+	--
+}
 
 --- SYMBOL TABLE ---------------------------------------------------------------
 
