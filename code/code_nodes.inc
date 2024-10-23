@@ -69,8 +69,8 @@ X(condition,   TERNARY_NODE_BODY, "node `?` node [`:` node]")
 #undef UNARY_NODE_BODY
 
 // literals
-X(scope,      { node *nodes; uint nodes_count; }, "`{` node {`;` node} `}`")
+X(scope,      { node *nodes; uint nodes_count; }, "`{` {node `;`} `}`")
 X(identifier, { utf8 *runes; uint runes_count; }, "identifier")
-X(string,     { utf8 *runes; uint runes_count; }, "string")
-X(digital,    { uint64  value; }, "digital|hexadecimal|binary")
-X(decimal,    { float64 value; }, "decimal|scientific")
+X(text,       { utf8 *runes; uint runes_count; }, "text")
+X(digital,    { uint64  value; },                 "digital|hexadecimal|binary")
+X(decimal,    { float64 value; },                 "decimal|scientific")

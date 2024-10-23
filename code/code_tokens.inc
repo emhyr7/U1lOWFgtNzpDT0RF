@@ -57,7 +57,7 @@ X(vertical_bar_equal_sign,        148, "`|=`")
 
 /* literals */
 X(identifier,  149, "identifier")  /* "<'_'|letter> {'_'|letter|'-'|digit}" */
-X(string,      150, "string")      /* */
+X(text,        150, "text")        /* */
 X(decimal,     151, "decimal")     /* */
 X(scientific,  152, "scientific")  /* */
 X(digital,     153, "digital")     /* */
