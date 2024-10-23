@@ -10,7 +10,7 @@ typedef enum : uintb
 #undef X
 } token_tag;
 
-constexpr utf8 token_tag_representations[][40] =
+constexpr utf8 representations_of_token_tags[][40] =
 {
 #define X(identifier, code, representation) [token_tag_##identifier] = representation,
 	#include "code_tokens.inc"
@@ -33,7 +33,7 @@ typedef enum : uintb
 #undef X
 } node_tag;
 
-constexpr utf8 node_tag_representations[][40] =
+constexpr utf8 representations_of_node_tags[][40] =
 {
 #define X(type, identifier, body, syntax) [node_tag_##identifier] = #identifier,
 	#include "code_nodes.inc"

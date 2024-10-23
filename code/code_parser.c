@@ -2,7 +2,7 @@
 
 static void report_source_v(severity severity, const utf8 *source_path, const utf8 *source, uint beginning, uint ending, uint row, uint column, const utf8 *message, vargs vargs)
 {
-	fprintf(stderr, "[%s] %s(%u|%u:%u): ", severity_representations[severity], source_path, beginning, row, column);
+	fprintf(stderr, "[%s] %s(%u|%u:%u): ", representations_of_severities[severity], source_path, beginning, row, column);
 	vfprintf(stderr, message, vargs);
 	fputc('\n', stderr);
 
@@ -384,7 +384,7 @@ static void parser_ensure_token(token_tag tag, parser *parser)
 {
 	if (parser->token.tag != tag)
 	{
-		parser_report_failure(parser, "Expected token: %s.", token_tag_representations[tag]);
+		parser_report_failure(parser, "Expected token: %s.", representations_of_token_tags[tag]);
 		jump(*parser->failure_landing, 1);
 	}
 }
@@ -512,6 +512,12 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 
 			/* scope */
 		case token_tag_left_curly_bracket:
+			if (left_precedence != precedences[node_tag_procedure])
+			{
+				left = PUSH_TRAIN(node, scope_node, &parser->allocator);
+				left->tag = node_tag_scope;
+				parser_parse_scope(&left->data->scope, parser);
+			}
 			break;
 
 			/* identifier */
@@ -675,7 +681,7 @@ static void display_node(const node *node, uint depth)
 
 	if (node)
 	{
-		printf("%s: ", node_tag_representations[node->tag]);
+		printf("%s: ", representations_of_node_tags[node->tag]);
 
 		depth += 1;
 		switch (types[node->tag])
@@ -765,14 +771,14 @@ void parser_parse_scope(scope_node *result, parser *parser)
 		case token_tag_etx:
 			if (!is_global)
 			{
-				parser_report_failure(parser, "Unterminted %s.", token_tag_representations[token_tag_left_curly_bracket]);
+				parser_report_failure(parser, "Unterminted %s.", representations_of_token_tags[token_tag_left_curly_bracket]);
 				goto failed;
 			}
 			else goto finished;
 		case token_tag_right_curly_bracket:
 			if (is_global)
 			{
-				parser_report_failure(parser, "Extraneous %s.", token_tag_representations[token_tag_right_curly_bracket]);
+				parser_report_failure(parser, "Extraneous %s.", representations_of_token_tags[token_tag_right_curly_bracket]);
 				goto failed;
 			}
 			else goto finished;

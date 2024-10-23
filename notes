@@ -1,3 +1,27 @@
-what is the current problem?
+though the syntax of an invocation is
 
-	invocation parsing is fucked up
+	node node
+
+the syntax of an identifier or resolution can be interpreted as an invocation
+too.
+
+
+--- TYPE CASTING ---------------------------------------------------------------
+
+{
+	a: uint8;
+	b: uint16;
+	c: uint32;
+	d: uint64;
+
+	d = c = b = a;
+}
+
+
+
+--- SYMBOL TABLE ---------------------------------------------------------------
+
+symbol types:
+	-> procedure - can be invoked.
+	-> tuple     - can be resolved from.
+	-> value     - can be mutated.

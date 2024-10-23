@@ -24,6 +24,12 @@ foo: (a: uint32, b: sint32, c: real32);
 mul := (x: real32, y: real32) -> (r: real32)
 {
 	return(x, y, z);
+
+	{
+		penis: 32;
+	};
+
+	balls;
 };
 
 -- procedure pointer
