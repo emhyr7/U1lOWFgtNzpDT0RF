@@ -24,7 +24,7 @@ X(2, logical_inequality,         BINARY_NODE_BODY, "node `!=` node")
 X(2, logical_majority,           BINARY_NODE_BODY, "node `>` node")
 X(2, logical_minority,           BINARY_NODE_BODY, "node `<` node")
 X(2, logical_inclusive_majority, BINARY_NODE_BODY, "node `>=` node")
-X(2, logical_inclusive_minority, BINARY_NODE_BODY, "node `<=` node")
+(2, logical_inclusive_minority, BINARY_NODE_BODY, "node `<=` node")
 
 /* arithmetic expressions */
 X(1, negation,       UNARY_NODE_BODY,  "`-` node")  
@@ -74,3 +74,4 @@ X(0, identifier, { utf8 *runes; uint runes_count; },  "identifier")
 X(0, text,       { utf8 *runes; uint runes_count; },  "text")
 X(0, digital,    { uint64 value; },                   "digital|hexadecimal|binary")
 X(0, decimal,    { real64 value; },                   "decimal|scientific")
+X(0, pragma,     { pragma pragma; },                                 "`#` identifier ...")

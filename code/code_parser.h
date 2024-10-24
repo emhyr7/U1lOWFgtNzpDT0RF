@@ -49,6 +49,12 @@ constexpr utf8 node_syntaxes[][40] =
 
 typedef struct node node;
 
+typedef enum
+{
+	pragma_undefined,
+	pragma_fp64,
+} pragma;
+
 #define X(type, identifier, body, syntax) typedef struct identifier##_node body identifier##_node;
 	#include "code_nodes.inc"
 #undef X

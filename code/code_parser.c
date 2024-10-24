@@ -478,6 +478,19 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 		node_tag left_tag;
 		switch (parser->token.tag)
 		{
+			/* pragma */
+		case token_tag_octothorpe:
+			parser_expect_token(token_tag_identifier, parser);
+			{
+				uint token_size = parser->token.ending - parser->token.beginning;
+				utf8 pragma_identifier[token_size + 1];
+				copy(pragma_identifier, parser->source + parser->token.beginning, token_size);
+				pragma_identifier[token_size] = 0;
+				pragma pragma = pragma_undefined;
+				if (!compare_text(pragma_identifier, "fp64")) pragma = pragma_fp64;
+			}
+			break;
+			
 			/* scoped */
 		case token_tag_left_parenthesis:    left_tag = node_tag_subexpression; goto scoped;
 		case token_tag_left_square_bracket: left_tag = node_tag_indexation;    goto scoped;
