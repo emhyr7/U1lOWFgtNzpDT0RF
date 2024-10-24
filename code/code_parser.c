@@ -49,15 +49,15 @@ static inline void report_source_comment(const utf8 *source_path, const utf8 *so
 static inline void report_source_caution(const utf8 *source_path, const utf8 *source, uint beginning, uint ending, uint row, uint column, const utf8 *message, ...) { vargs vargs; GET_VARGS(vargs, message); report_source_v(severity_caution, source_path, source, beginning, ending, row, column, message, vargs); END_VARGS(vargs); }
 static inline void report_source_failure(const utf8 *source_path, const utf8 *source, uint beginning, uint ending, uint row, uint column, const utf8 *message, ...) { vargs vargs; GET_VARGS(vargs, message); report_source_v(severity_failure, source_path, source, beginning, ending, row, column, message, vargs); END_VARGS(vargs); }
 
-static inline void parser_report_v(severity severity, parser *parser, const utf8 *message, vargs vargs) { report_source_v(severity, parser->source_path, parser->source, parser->token.beginning, parser->token.ending, parser->token.row, parser->token.column, message, vargs); }
-static inline void parser_report(severity severity, parser *parser, const utf8 *message, ...) { vargs vargs; GET_VARGS(vargs, message); parser_report_v(severity, parser, message, vargs); END_VARGS(vargs); }
+static inline void report_v(severity severity, parser *parser, const utf8 *message, vargs vargs) { report_source_v(severity, parser->source_path, parser->source, parser->token.beginning, parser->token.ending, parser->token.row, parser->token.column, message, vargs); }
+static inline void report(severity severity, parser *parser, const utf8 *message, ...) { vargs vargs; GET_VARGS(vargs, message); report_v(severity, parser, message, vargs); END_VARGS(vargs); }
 
-static inline void parser_report_verbose(parser *parser, const utf8 *message, ...) { vargs vargs; GET_VARGS(vargs, message); parser_report_v(severity_verbose, parser, message, vargs); END_VARGS(vargs); }
-static inline void parser_report_comment(parser *parser, const utf8 *message, ...) { vargs vargs; GET_VARGS(vargs, message); parser_report_v(severity_comment, parser, message, vargs); END_VARGS(vargs); }
-static inline void parser_report_caution(parser *parser, const utf8 *message, ...) { vargs vargs; GET_VARGS(vargs, message); parser_report_v(severity_caution, parser, message, vargs); END_VARGS(vargs); }
-static inline void parser_report_failure(parser *parser, const utf8 *message, ...) { vargs vargs; GET_VARGS(vargs, message); parser_report_v(severity_failure, parser, message, vargs); END_VARGS(vargs); }
+static inline void report_verbose(parser *parser, const utf8 *message, ...) { vargs vargs; GET_VARGS(vargs, message); report_v(severity_verbose, parser, message, vargs); END_VARGS(vargs); }
+static inline void report_comment(parser *parser, const utf8 *message, ...) { vargs vargs; GET_VARGS(vargs, message); report_v(severity_comment, parser, message, vargs); END_VARGS(vargs); }
+static inline void report_caution(parser *parser, const utf8 *message, ...) { vargs vargs; GET_VARGS(vargs, message); report_v(severity_caution, parser, message, vargs); END_VARGS(vargs); }
+static inline void report_failure(parser *parser, const utf8 *message, ...) { vargs vargs; GET_VARGS(vargs, message); report_v(severity_failure, parser, message, vargs); END_VARGS(vargs); }
 
-static uintb parser_peek(utf32 *rune, parser *parser)
+static uintb peek(utf32 *rune, parser *parser)
 {
 	sintb increment;
 	uint peek_position = parser->position + parser->increment;
@@ -79,10 +79,10 @@ static uintb parser_peek(utf32 *rune, parser *parser)
 	return increment;
 }
 
-static utf32 parser_advance(parser *parser)
+static utf32 advance(parser *parser)
 {
 	utf32 rune;
-	uintb increment = parser_peek(&rune, parser);
+	uintb increment = peek(&rune, parser);
 
 	parser->position += parser->increment;
 	if (parser->rune == '\n')
@@ -111,7 +111,7 @@ static inline bit is_digit(utf32 rune)
 	return rune >= '0' && rune <= '9';
 }
 
-static void parser_load(const utf8 *source_path, parser *parser)
+static void load(const utf8 *source_path, parser *parser)
 {
 	REPORT_VERBOSE("Loading source: %s\n", source_path);
 
@@ -127,20 +127,20 @@ static void parser_load(const utf8 *source_path, parser *parser)
 	parser->row       = 0;
 	parser->rune      = '\n';
 	parser->increment = 0;
-	parser_advance(parser);
+	advance(parser);
 }
 
-static token_tag parser_get_token(parser *parser)
+static token_tag get_token(parser *parser)
 {
 repeat:
-	while (is_whitespace(parser->rune)) parser_advance(parser);
+	while (is_whitespace(parser->rune)) advance(parser);
 
 	parser->token.beginning = parser->position;
 	parser->token.row       = parser->row;
 	parser->token.column    = parser->column;
 
 	utf32 peeked_rune;
-	uintb peeked_increment = parser_peek(&peeked_rune, parser);
+	uintb peeked_increment = peek(&peeked_rune, parser);
 
 	switch (parser->rune)
 	{
@@ -200,7 +200,7 @@ repeat:
 		}
 		else if (peeked_rune == '-')
 		{
-			do parser_advance(parser);
+			do advance(parser);
 			while (parser->rune != '\n');
 			goto repeat;
 		}
@@ -215,8 +215,8 @@ repeat:
 	case '<':
 		if (peeked_rune == '<')
 		{
-			parser_advance(parser);
-			peeked_increment = parser_peek(&peeked_rune, parser);
+			advance(parser);
+			peeked_increment = peek(&peeked_rune, parser);
 			if (peeked_rune == '=')
 			{
 				parser->token.tag = token_tag_less_than_sign_2_equal_sign;
@@ -240,8 +240,8 @@ repeat:
 	case '>':
 		if (peeked_rune == '>')
 		{
-			parser_advance(parser);
-			peeked_increment = parser_peek(&peeked_rune, parser);
+			advance(parser);
+			peeked_increment = peek(&peeked_rune, parser);
 			if (peeked_rune == '=')
 			{
 				parser->token.tag = token_tag_greater_than_sign_2_equal_sign;
@@ -278,19 +278,19 @@ repeat:
 	case '"':
 		for (;;)
 		{
-			parser_advance(parser);
+			advance(parser);
 			if (parser->rune == '"') break;
 			if (parser->rune == '\\')
 			{
-				switch (parser_advance(parser))
+				switch (advance(parser))
 				{
 				default:
-					parser_advance(parser);
+					advance(parser);
 					break;
 				}
 			}
 		}
-		parser_advance(parser); /* skip the terminating `"` */
+		advance(parser); /* skip the terminating `"` */
 		parser->token.tag = token_tag_text;
 		break;
 	case '#':
@@ -315,15 +315,15 @@ repeat:
 		goto advance_once;
 
 	advance_twice:
-		parser_advance(parser);
+		advance(parser);
 	advance_once:
-		parser_advance(parser);
+		advance(parser);
 		break;
 
 	default:
 		if (is_letter(parser->rune) || parser->rune == '_')
 		{
-			do parser_advance(parser);
+			do advance(parser);
 			while (is_letter(parser->rune) || parser->rune == '_' || parser->rune == '-' || is_digit(parser->rune));
 			parser->token.tag = token_tag_identifier;
 		}
@@ -333,7 +333,7 @@ repeat:
 #if 0
 			if (parser->rune == '0')
 			{
-				parser_advance(parser);
+				advance(parser);
 				switch (parser->rune)
 				{
 				case 'b': parser->token.tag = token_tag_binary; break;
@@ -353,22 +353,22 @@ repeat:
 					case token_tag_hexadecimal:
 					case token_tag_decimal:
 					case token_tag_scientific:
-						parser_report_failure(parser, "Weird ass number.");
-						while (!is_whitespace(parser->rune)) parser_advance(parser);
+						report_failure(parser, "Weird ass number.");
+						while (!is_whitespace(parser->rune)) advance(parser);
 						goto failed;
 					default:
 						break;
 					}
 					parser->token.tag = token_tag_decimal;
 				}
-				parser_advance(parser);
+				advance(parser);
 			}
 		}
 		else
 		{
 			parser->token.tag = token_tag_unknown;
-			parser_advance(parser);
-			parser_report_failure(parser, "Unknown token.");
+			advance(parser);
+			report_failure(parser, "Unknown token.");
 		}
 	}
 	
@@ -380,19 +380,19 @@ failed:
 	jump(*parser->failure_landing, 1);
 }
 
-static void parser_ensure_token(token_tag tag, parser *parser)
+static void ensure_token(token_tag tag, parser *parser)
 {
 	if (parser->token.tag != tag)
 	{
-		parser_report_failure(parser, "Expected token: %s.", token_tags_representations[tag]);
+		report_failure(parser, "Expected token: %s.", token_tags_representations[tag]);
 		jump(*parser->failure_landing, 1);
 	}
 }
 
-static void parser_expect_token(token_tag tag, parser *parser)
+static void expect_token(token_tag tag, parser *parser)
 {
-	parser_get_token(parser);
-	parser_ensure_token(tag, parser);
+	get_token(parser);
+	ensure_token(tag, parser);
 }
 
 typedef uint precedence;
@@ -412,7 +412,7 @@ constexpr precedence precedences[] =
 	[node_tag_logical_negation] = 140,
 	[node_tag_negation]         = 140,
 	[node_tag_bitwise_negation] = 140,
-	[node_tag_reference]        = 140,
+	[node_tag_address]          = 140,
 
 	[node_tag_multiplication] = 130,
 	[node_tag_division]       = 130,
@@ -462,16 +462,18 @@ constexpr precedence precedences[] =
 	[node_tag_list] = 1,
 };
 
-static node *parser_parse_node(precedence precedence, parser *parser);
+static node *parse_node(precedence precedence, parser *parser);
 
-static void parser_parse_scope     (scope_node      *result, parser *parser);
-static void parser_parse_identifier(identifier_node *result, parser *parser);
-static void parser_parse_text      (text_node       *result, parser *parser);
-static void parser_parse_digital   (digital_node    *result, parser *parser);
-static void parser_parse_decimal   (decimal_node    *result, parser *parser);
+static void parse_scope     (scope_node      *result, parser *parser);
+static void parse_identifier(identifier_node *result, parser *parser);
+static void parse_text      (text_node       *result, parser *parser);
+static void parse_digital   (digital_node    *result, parser *parser);
+static void parse_decimal   (decimal_node    *result, parser *parser);
 
-node *parser_parse_node(precedence left_precedence, parser *parser)
+node *parse_node(precedence left_precedence, parser *parser)
 {
+	uint beginning = parser->token.beginning;
+	
 	/* parse the _possibly left_ node */
 	node *left = 0;
 	{
@@ -480,7 +482,9 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 		{
 			/* pragma */
 		case token_tag_octothorpe:
-			parser_expect_token(token_tag_identifier, parser);
+			left = PUSH_TRAIN(node, pragma_node, &parser->allocator);
+			left->tag = node_tag_pragma;
+			expect_token(token_tag_identifier, parser);
 			{
 				uint token_size = parser->token.ending - parser->token.beginning;
 				utf8 pragma_identifier[token_size + 1];
@@ -488,6 +492,7 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 				pragma_identifier[token_size] = 0;
 				pragma pragma = pragma_undefined;
 				if (!compare_text(pragma_identifier, "fp64")) pragma = pragma_fp64;
+				
 			}
 			break;
 			
@@ -497,10 +502,10 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 		scoped:
 			left = PUSH_TRAIN(node, unary_node, &parser->allocator);
 			left->tag = left_tag;
-			parser_get_token(parser); /* skip the onset */
-			left->data->unary.node = parser_parse_node(0, parser);
-			parser_ensure_token(left_tag == node_tag_subexpression ? token_tag_right_parenthesis : token_tag_right_square_bracket, parser);
-			parser_get_token(parser);
+			get_token(parser); /* skip the onset */
+			left->data->unary.node = parse_node(0, parser);
+			ensure_token(left_tag == node_tag_subexpression ? token_tag_right_parenthesis : token_tag_right_square_bracket, parser);
+			get_token(parser);
 			break;
 			
 			/* terminators */
@@ -515,12 +520,12 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 		case token_tag_exclamation_mark: left_tag = node_tag_logical_negation; goto unary;
 		case token_tag_minus_sign:       left_tag = node_tag_negation;         goto unary;
 		case token_tag_tilde:            left_tag = node_tag_bitwise_negation; goto unary;
-		case token_tag_at_sign:          left_tag = node_tag_reference;        goto unary;
+		case token_tag_at_sign:          left_tag = node_tag_address;          goto unary;
 		unary:
 			left = PUSH_TRAIN(node, unary_node, &parser->allocator);
 			left->tag = left_tag;
-			parser_get_token(parser); /* skip the operator */
-			left->data->unary.node = parser_parse_node(precedences[left_tag], parser);
+			get_token(parser); /* skip the operator */
+			left->data->unary.node = parse_node(precedences[left_tag], parser);
 			break;
 
 			/* scope */
@@ -529,7 +534,7 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 			{
 				left = PUSH_TRAIN(node, scope_node, &parser->allocator);
 				left->tag = node_tag_scope;
-				parser_parse_scope(&left->data->scope, parser);
+				parse_scope(&left->data->scope, parser);
 			}
 			break;
 
@@ -537,14 +542,14 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 		case token_tag_identifier:
 			left = PUSH_TRAIN(node, identifier_node, &parser->allocator);
 			left->tag = node_tag_identifier;
-			parser_parse_identifier(&left->data->identifier, parser);
+			parse_identifier(&left->data->identifier, parser);
 			break;
 
 			/* text */
 		case token_tag_text:
 			left = PUSH_TRAIN(node, text_node, &parser->allocator);
 			left->tag = node_tag_text;
-			parser_parse_text(&left->data->text, parser);
+			parse_text(&left->data->text, parser);
 			break;
 
 			/* digital */
@@ -553,7 +558,7 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 		case token_tag_hexadecimal:
 			left = PUSH_TRAIN(node, digital_node, &parser->allocator);
 			left->tag = node_tag_digital;
-			parser_parse_digital(&left->data->digital, parser);
+			parse_digital(&left->data->digital, parser);
 			break;
 			
 			/* decimal */
@@ -561,7 +566,7 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 		case token_tag_scientific:
 			left = PUSH_TRAIN(node, decimal_node, &parser->allocator);
 			left->tag = node_tag_decimal;
-			parser_parse_decimal(&left->data->decimal, parser);
+			parse_decimal(&left->data->decimal, parser);
 			break;
 
 		case token_tag_equal_sign:
@@ -570,10 +575,11 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 			break;
 
 		default:
-			parser_report_failure(parser, "Unexpected token.");
+			report_failure(parser, "Unexpected token.");
 			jump(*parser->failure_landing, 1);
 		}
 	}
+
 	if (left)
 	{
 		for (;;)
@@ -643,12 +649,12 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 			if (right_precedence <= left_precedence) goto finished;
 
 			/* skip the operator [if the syntax has one] */
-			if (right_tag != node_tag_invocation) parser_get_token(parser);
+			if (right_tag != node_tag_invocation) get_token(parser);
 
 			node *right = is_ternary ? PUSH_TRAIN(node, ternary_node, &parser->allocator) : PUSH_TRAIN(node, binary_node, &parser->allocator);
 			right->tag = right_tag;
 			right->data->binary.left = left;
-			right->data->binary.right = parser_parse_node(right_precedence, parser);
+			right->data->binary.right = parse_node(right_precedence, parser);
 
 			if (is_ternary)
 			{
@@ -658,13 +664,13 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 				case token_tag_left_curly_bracket:
 					right->data->ternary.node = PUSH_TRAIN(node, scope_node, &parser->allocator);
 					right->data->ternary.node->tag = node_tag_scope;
-					parser_parse_scope(&right->data->ternary.node->data->scope, parser);
+					parse_scope(&right->data->ternary.node->data->scope, parser);
 					break;
 
 					/* condition */
 				case token_tag_colon:
-					parser_get_token(parser); /* skip the `:` */
-					right->data->ternary.node = parser_parse_node(right_precedence, parser);
+					get_token(parser); /* skip the `:` */
+					right->data->ternary.node = parse_node(right_precedence, parser);
 					break;
 
 				default:
@@ -678,18 +684,22 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 	}
 
 finished:
+	if (left)
+	{
+		left->beginning = beginning;
+		left->ending = parser->token.ending;
+	}
 	return left;
 }
-
-static void display_node(const node *node, uint depth)
+uintb node_types[] =
 {
-	uintb types[] =
-	{
 #define X(type, identifier, body, syntax) [node_tag_##identifier] = type,
 	#include "code_nodes.inc"
 #undef X
-	};
+};
 
+static void display_node(const node *node, uint depth)
+{
 	for (uint i = 0; i < depth; ++i) printf("  ");
 
 	if (node)
@@ -697,7 +707,7 @@ static void display_node(const node *node, uint depth)
 		printf("%s: ", node_tags_representations[node->tag]);
 
 		depth += 1;
-		switch (types[node->tag])
+		switch (node_types[node->tag])
 		{
 		case 0:
 			switch (node->tag)
@@ -710,10 +720,10 @@ static void display_node(const node *node, uint depth)
 				}
 				break;
 			case node_tag_identifier:
-				printf("%.*s", node->data->identifier.runes_count, node->data->identifier.runes);
+				printf("%.*s", node->data->identifier.size, node->data->identifier.data);
 				break;
 			case node_tag_text:
-				printf("%.*s", node->data->identifier.runes_count, node->data->text.runes);
+				printf("%.*s", node->data->identifier.size, node->data->text.data);
 				break;
 			case node_tag_digital:
 				printf("%llu", node->data->digital.value);
@@ -749,7 +759,7 @@ static void display_node(const node *node, uint depth)
 	printf("\n");
 }
 
-void parser_parse_scope(scope_node *result, parser *parser)
+void parse_scope(scope_node *result, parser *parser)
 {
 	bit is_global = result == &parser->program->globe;
 	if (!is_global) ASSERT(parser->token.tag == token_tag_left_curly_bracket);
@@ -758,10 +768,10 @@ void parser_parse_scope(scope_node *result, parser *parser)
 	result->nodes = ALLOCATE(node *, nodes_capacity); /* TODO: stop `VirtualAlloc`ing */
 	result->nodes_count = 0;
 
-	parser_get_token(parser); /* get the first token if `is_global`, otherwise, skip the `{` */
+	get_token(parser); /* get the first token if `is_global`, otherwise, skip the `{` */
 	for (;;)
 	{
-		node *current_node = parser_parse_node(0, parser);
+		node *current_node = parse_node(0, parser);
 		if (current_node)
 		{
 			if (result->nodes_count >= nodes_capacity)
@@ -779,30 +789,30 @@ void parser_parse_scope(scope_node *result, parser *parser)
 		switch (parser->token.tag)
 		{
 		case token_tag_semicolon:
-			parser_get_token(parser);
+			get_token(parser);
 			break;
 		case token_tag_etx:
 			if (!is_global)
 			{
-				parser_report_failure(parser, "Unterminted %s.", token_tags_representations[token_tag_left_curly_bracket]);
+				report_failure(parser, "Unterminted %s.", token_tags_representations[token_tag_left_curly_bracket]);
 				goto failed;
 			}
 			else goto finished;
 		case token_tag_right_curly_bracket:
 			if (is_global)
 			{
-				parser_report_failure(parser, "Extraneous %s.", token_tags_representations[token_tag_right_curly_bracket]);
+				report_failure(parser, "Extraneous %s.", token_tags_representations[token_tag_right_curly_bracket]);
 				goto failed;
 			}
 			else goto finished;
 		default:
-			parser_report_caution(parser, "?????");
+			report_caution(parser, "?????");
 			UNIMPLEMENTED();
 		}
 	}
 
 finished:
-	parser_get_token(parser); /* skip `}`, or ignore ETX */
+	get_token(parser); /* skip `}`, or ignore ETX */
 
 	return;
 
@@ -810,16 +820,16 @@ failed:
 	jump(*parser->failure_landing, 1);
 }
 
-void parser_parse_identifier(identifier_node *result, parser *parser)
+void parse_identifier(identifier_node *result, parser *parser)
 {
-	result->runes_count = parser->token.ending - parser->token.beginning;
+	result->size = parser->token.ending - parser->token.beginning;
 	const utf8 *source = parser->source + parser->token.beginning;
-	result->runes = (utf8 *)push(result->runes_count, sizeof(void *), &parser->allocator);
-	copy(result->runes, source, result->runes_count);
-	parser_get_token(parser);
+	result->data = (utf8 *)push(result->size, sizeof(void *), &parser->allocator);
+	COPY(result->data, source, result->size);
+	get_token(parser);
 }
 
-void parser_parse_text(text_node *result, parser *parser)
+void parse_text(text_node *result, parser *parser)
 {
 	ASSERT(parser->token.tag == token_tag_text);
 
@@ -827,12 +837,12 @@ void parser_parse_text(text_node *result, parser *parser)
 	const utf8 *source = parser->source + parser->token.beginning;
 	result->runes = (utf8 *)push(result->runes_count, sizeof(void *), &parser->allocator);
 	copy(result->runes, source, result->runes_count);
-	parser_get_token(parser);
+	get_token(parser);
 
 	/* TODO: handle escape characters */
 }
 
-void parser_parse_digital(digital_node *result, parser *parser)
+void parse_digital(digital_node *result, parser *parser)
 {
 	ASSERT(parser->token.tag == token_tag_binary
 	       || parser->token.tag == token_tag_digital
@@ -860,24 +870,275 @@ void parser_parse_digital(digital_node *result, parser *parser)
 		result->value += character - '0';
 	}
 	
-	parser_get_token(parser);
+	get_token(parser);
 
 	/* TODO: ditch the C standard library */
 }
 
-void parser_parse_decimal(decimal_node *result, parser *parser)
+void parse_decimal(decimal_node *result, parser *parser)
 {
 	ASSERT(parser->token.tag == token_tag_decimal
 	       || parser->token.tag == token_tag_scientific);
 
 	utf8 *ending;
 	result->value = strtod(parser->source + parser->token.beginning, &ending);
-	parser_get_token(parser);
+	get_token(parser);
 	
 	/* TODO: ditch the C standard library */
 }
 
-void parser_parse(const utf8 *source_path, program *program, parser *parser)
+typedef uint type_handle;
+
+typedef enum
+{
+	type_type_undefined,
+	type_type_primitive,
+	type_type_address,
+	type_type_array,
+	type_type_tuple,
+	type_type_defined,
+} type_type;
+
+typedef enum : uintb
+{
+	type_type_uint8,
+	type_type_uint16,
+	type_type_uint32,
+	type_type_uint64,
+	type_type_sint8,
+	type_type_sint16,
+	type_type_sint32,
+	type_type_sint64,
+	type_type_real32,
+	type_type_real64,
+} primitive_type;
+
+typedef struct
+{
+	type *subtype;
+} address_type;
+
+typedef struct
+{
+	type *subtype;
+	uintl count;
+} array_type;
+
+typedef struct
+{
+	type **subtypes;
+	uintl  subtypes_count;
+} tuple_type;
+
+typedef struct
+{
+	type *pointer;
+} defined_type;
+
+struct type
+{
+	type_type type;
+
+	/* a type is addressable if and only if the type is of an indexation or leads
+	   to a declaration */
+	bit is_addressable : 1;
+
+	union
+	{
+		primitive_type primitive;
+		address_type   address;
+		array_type     array;
+		tuple_type     tuple;
+		defined_type   defined;
+	};
+};
+
+bit get_addressableness(const node *node)
+{
+	declaration_node *declaration = 0;
+
+	bit is_addressable;
+	switch (node->tag)
+	{
+		{
+	case node_tag_resolution:
+			declaration_node *declaration = get_declaration_from_resolution(node);
+	case node_tag_identifier:
+			if (!declaration ) declaration = get_declaration_from_identifier(node);
+			is_addressable = declaration != 0;
+		}
+		break;
+	case node_tag_declaration:
+	case node_tag_indexation:
+		is_addressable = 1;
+		break;
+	default:
+		is_addressable = 0;
+		break;
+	}
+
+	return is_addressable;
+}
+
+constexpr type primitive_type_sint8 =
+{
+	.type = type_type_literal,
+	.type = type_type_
+};
+
+typedef uint type_identifier;
+
+typedef struct
+{
+	void *key;
+	uint  key_size;
+} table_key;
+
+typedef struct
+{
+	table_key *keys;
+	byte      *values;
+	uint       entries_count;
+} table;
+
+void *get_from_table(uint value_size, const void *key, uint key_size, table *table)
+{
+	void *value = 0;
+	for (uint i = 0; i < table->entries_count; ++i)
+	{
+		table_key *table_key = &table->keys[i];
+		if (!COMPARE(key, table_key->key, MINIMUM(table_key->key_size, key_size)))
+		{
+			value = &table->values[i * value_size];
+			break;
+		}
+	}
+	return value;
+}
+
+#define GET_FROM_TABLE(type, key, key_size, table) (type *)get_from_table(sizeof(type), key, key_size, table)
+
+/* for uniformality */
+bit type_is_addressable(const type *type)
+{
+	return type->is_addressable;
+}
+
+node *set_type_of_literal_node(node *node, parser *parser)
+{
+	switch (node->tag)
+	{
+	case node_tag_scope:
+		node->type_info.class = type_class_null;
+		break;
+	case node_tag_identifier:
+		/* NOTE: the identifier might be the left of a declaration, instead of a path
+		   to a declaration... */
+		break;
+	case node_tag_text:
+		node->type_info.class = type_class_array;
+		node->type_info.pointer = push_type(node->type.class);
+		node->type_info.pointer->array.subtype = &uint8_type;
+		node->type_info.pointer->array.size = node->data->text.size;
+		break;
+	case node_tag_digital:
+		node->type_info.class = type_class_primitive;
+		switch (get_minimum_bits_count_of(&node->data->digital.value))
+		{
+		case 8:  node->type_info.pointer = &primitive_types.uint8;  break;
+		case 16: node->type_info.pointer = &primitive_types.uint16; break;
+		case 32: node->type_info.pointer = &primitive_types.uint32; break;
+		case 64: node->type_info.pointer = &primitive_types.uint64; break;
+		}
+		break;
+	case node_tag_decimal:
+		node->type_info.class = type_class_primitive;
+		node->type_info.pointer = &primitive_types.real64;
+		break;
+	default:
+		UNREACHABLE();
+	}
+}
+
+node *set_type_of_unary_node(node *node, parser *parser)
+{
+	ZERO(&node->type, 1);
+
+	node *subnode = set_type_of_node(node->data->unary.node, parser);
+
+	switch (node->tag)
+	{
+	case node_tag_logical_negation:
+		if (type_is_integer(&subnode->type))
+		{
+			result->type = subnode->type;
+		}
+		else
+		{
+			report_failure(parser, "A logical negation only applies to integers.");
+			goto failed;
+		}
+		break;
+	case node_tag_negation:
+		if (type_is_integer(&subnode->type))
+		{
+			if (type_is_unsigned(&subnode->type))
+			{
+				uint bits_count = get_bits_count_of_type(&subnode->type);
+				switch (bits_count)
+				{
+				case 8:  node->type = &sint8_type;  break;
+				case 16: node->type = &sint16_type; break;
+				case 32: node->type = &sint32_type; break;
+				case 64: node->type = &sint64_type; break;
+				}
+			}
+			else
+			{
+				result->type = subnode->type;
+			}
+		}
+		else if (type_is_decimal(&subnode->type))
+		{
+			node->type = subnode->type;
+		}
+		else
+		{
+			report_failure(parser, "A negation only applies to numbers.");
+			goto failed;
+		}
+		break;
+	case node_tag_bitwise_negation:
+		if (type_is_integer(&subnode->type))
+		{
+			node->type = subnode->type;
+		}
+		else
+		{
+			report_failure(parser, "A bitwise negation only applies to integers.");
+			goto failed;
+		}
+		break;
+	case node_tag_address:
+		if (type_is_addressable(subnode->type))
+		{
+			node->type = push_type(type_type_address);
+			node->type->address.subtype = subnode->type;
+		}
+		else
+		{
+			report_failure(parser, "A address only applies to addressables.");
+			goto failed;
+		}
+		break;
+	default:
+		UNREACHABLE();
+	}
+
+	return node;
+}
+
+void parse(const utf8 *source_path, program *program, parser *parser)
 {
 	ZERO(parser, 1);
 
@@ -891,14 +1152,8 @@ void parser_parse(const utf8 *source_path, program *program, parser *parser)
 	}
 
 	parser->program = program;
-	parser_load(source_path, parser);
-	parser_parse_scope(&parser->program->globe, parser);
-	for (uint i = 0; i < parser->program->globe.nodes_count; ++i)
-	{
-		display_node(parser->program->globe.nodes[i], 0);
-	}
-
-	
+	load(source_path, parser);
+	parse_scope(&parser->program->globe, parser);
 
 	REPORT_VERBOSE("Finished parsing.\n");
 }

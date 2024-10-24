@@ -93,6 +93,11 @@ inline void zero(void *left, uint size)
 	fill(left, size, 0);
 }
 
+inline sints compare(const void *left, const void *right, uint size)
+{
+	return memcmp(left, right, size);
+}
+
 inline uintb clz(uintl value)
 {
 #if defined(CODE_ON_PLATFORM_WIN32)

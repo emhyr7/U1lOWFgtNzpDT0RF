@@ -1,3 +1,17 @@
+/*
+
+CODE CONVENTIONS ---------------------------------------------------------------
+
+	NOMENCLATURE
+		1) everything follows miniscule snakecase, where macros [without exception]
+		are majuscule.
+
+		2) globals should have some ultimate qualifier (e.g. `final_`, `global_`,
+		   `default_`).
+
+		3) adjectives are awesome.
+*/
+
 #if !defined(CODE_H)
 #define CODE_H
 
@@ -200,6 +214,10 @@ void zero(void *left, uint size);
 #define MOVE(left, right, count) move(left, right, (count) * sizeof(typeof(*right)))
 #define FILL(left, count, value) fill(left, (count) * sizeof(typeof(*left)), value)
 #define ZERO(left, count)        zero(left, (count) * sizeof(typeof(*left)))
+
+sints compare(const void *left, const void *right, uint size);
+
+#define COMPARE(left, right, count) compare(left, right, (count) * sizeof(*right))
 
 sintb decode_utf8 (utf32 *left, const utf8  *right);
 sintb decode_utf16(utf32 *left, const utf16 *right);

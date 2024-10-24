@@ -1,3 +1,20 @@
+addressable things.
+
+valid:
+
+	x := foo;
+	@x;
+
+	@[0];
+
+invalid:
+
+	@0;
+
+
+
+----------------
+
 though the syntax of an invocation is
 
 	node node
@@ -29,10 +46,20 @@ a table of mappings from an identifier to an index to a type.
 	a: real32;
 	b: real64;
 
-	--	the following is ill-formed:
-	--
-	--		b = a;
-	--
+	--- the following is ill-formed:
+	---
+	--- 	b = a;
+	---
+}
+
+{
+	a: uint64;
+	b: real64;
+
+	--- the following is ill-formed:
+	---
+	--- 	a = b;
+	---
 }
 
 --- SYMBOL TABLE ---------------------------------------------------------------

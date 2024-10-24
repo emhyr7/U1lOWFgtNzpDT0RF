@@ -24,7 +24,7 @@ X(2, logical_inequality,         BINARY_NODE_BODY, "node `!=` node")
 X(2, logical_majority,           BINARY_NODE_BODY, "node `>` node")
 X(2, logical_minority,           BINARY_NODE_BODY, "node `<` node")
 X(2, logical_inclusive_majority, BINARY_NODE_BODY, "node `>=` node")
-(2, logical_inclusive_minority, BINARY_NODE_BODY, "node `<=` node")
+X(2, logical_inclusive_minority, BINARY_NODE_BODY, "node `<=` node")
 
 /* arithmetic expressions */
 X(1, negation,       UNARY_NODE_BODY,  "`-` node")  
@@ -56,7 +56,7 @@ X(2, bitwise_left_shift_assignment,            BINARY_NODE_BODY, "node `<<=` nod
 X(2, bitwise_right_shift_assignment,           BINARY_NODE_BODY, "node `>>=` node")
 
 /* other expressions */
-X(1, reference,   UNARY_NODE_BODY,   "`@` node")
+X(1, address,     UNARY_NODE_BODY,   "`@` node")
 X(2, invocation,  BINARY_NODE_BODY,  "node node")
 X(2, resolution,  BINARY_NODE_BODY,  "node `.` node")
 X(2, list,        BINARY_NODE_BODY,  "node `,` node")
@@ -68,10 +68,14 @@ X(3, condition,   TERNARY_NODE_BODY, "node `?` node [`:` node]")
 #undef BINARY_NODE_BODY
 #undef UNARY_NODE_BODY
 
-// literals
+/* literals */
 X(0, scope,      { node **nodes; uint nodes_count; }, "`{` {node `;`} `}`")
-X(0, identifier, { utf8 *runes; uint runes_count; },  "identifier")
-X(0, text,       { utf8 *runes; uint runes_count; },  "text")
+X(0, identifier, { utf8 *data; uint size; },          "identifier")
+X(0, text,       { utf8 *data; uint size; },          "text")
 X(0, digital,    { uint64 value; },                   "digital|hexadecimal|binary")
+
+/* to use a single precision floating-point literal, a pragma is used */
 X(0, decimal,    { real64 value; },                   "decimal|scientific")
-X(0, pragma,     { pragma pragma; },                                 "`#` identifier ...")
+
+/* pragmas can modify the syntax tree, and are omitted in the final syntax tree */
+X(0, pragma,     { pragma value; },                   "`#` identifier ...")
