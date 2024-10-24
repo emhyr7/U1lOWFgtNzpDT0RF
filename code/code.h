@@ -216,7 +216,8 @@ uint get_size_of_utf16_text(const utf16 *text);
 sint compare_text      (const utf8 *left, const utf8 *right);
 sint compare_sized_text(const utf8 *left, const utf8 *right, uint size);
 
-#define COMPARE_LITERAL_TEXT(left, right) compare_sized_text(left, right, sizeof(right))
+#define COMPARE_LITERAL_TEXT(left, right) compare_sized_text(left, right, sizeof(right) - 1)
+#define COMPARE_LITERAL_TEXT_WITH_SIZED_TEXT(left, right, size) compare_sized_text(left, right, MINIMUM(sizeof(left) - 1, size))
 
 void copy_text      (utf8 *left, const utf8 *right);
 void copy_sized_text(utf8 *left, const utf8 *right, uint size);

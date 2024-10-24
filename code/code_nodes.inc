@@ -68,9 +68,10 @@ X(3, condition,   TERNARY_NODE_BODY, "node `?` node [`:` node]")
 #undef BINARY_NODE_BODY
 #undef UNARY_NODE_BODY
 
-// literals
+/* literals */
 X(0, scope,      { node **nodes; uint nodes_count; }, "`{` {node `;`} `}`")
 X(0, identifier, { utf8 *runes; uint runes_count; },  "identifier")
 X(0, text,       { utf8 *runes; uint runes_count; },  "text")
 X(0, digital,    { uint64 value; },                   "digital|hexadecimal|binary")
 X(0, decimal,    { real64 value; },                   "decimal|scientific")
+X(0, pragma,     { pragma_code code; node *node; },   "`#` identifier ...")

@@ -12,7 +12,7 @@ sint64: -(uint64 << 1);
 
 -- floating-piont type
 real32: 1.0;
-real64: 1e0;
+real64: #fp64 1.0;
 
 -- structures
 

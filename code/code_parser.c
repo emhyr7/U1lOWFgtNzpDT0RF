@@ -478,6 +478,22 @@ node *parser_parse_node(precedence left_precedence, parser *parser)
 		node_tag left_tag;
 		switch (parser->token.tag)
 		{
+			/* pragma */
+		case token_tag_octothorpe:
+			left = PUSH_TRAIN(node, pragma_node, &parser->allocator);
+			left->tag = node_tag_pragma;
+			parser_expect_token(token_tag_identifier, parser);
+			{
+				identifier_node identifier;
+				parser_parse_identifier(&identifier, parser);
+				if (!COMPARE_LITERAL_TEXT_WITH_SIZED_TEXT("fp64", identifier.runes, identifier.runes_count))
+					left->data->pragma.code = pragma_code_fp64;
+				else
+					left->data->pragma.code = pragma_code_none;
+			}
+			left->data->pragma.node = parser_parse_node(0, parser);
+			break;
+			
 			/* scoped */
 		case token_tag_left_parenthesis:    left_tag = node_tag_subexpression; goto scoped;
 		case token_tag_left_square_bracket: left_tag = node_tag_indexation;    goto scoped;
@@ -702,6 +718,21 @@ static void display_node(const node *node, uint depth)
 			case node_tag_decimal:
 				printf("%lf", node->data->decimal.value);
 				break;
+			case node_tag_pragma:
+				switch (node->data->pragma.code)
+				{
+				case pragma_code_none:
+					printf("none");
+					break;
+				case pragma_code_fp64:
+					printf("fp64");
+					break;
+				}
+				printf("\n");
+				if (node->data->pragma.node)
+				{
+					display_node(node->data->pragma.node, depth);
+				}
 			default:
 				break;
 			}
